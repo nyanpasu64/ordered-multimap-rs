@@ -40,6 +40,10 @@ thread_local! {
 const K: usize = 1024;
 const M: usize = K * K;
 
+fn uaf() -> *mut usize {
+    &mut 1usize as *mut usize
+}
+
 fn fuzz(data: &Setup) {
     // TODO seed rng
 
@@ -62,6 +66,8 @@ fn fuzz(data: &Setup) {
         match *action {
             Action::PackToFit => {
                 map.pack_to_fit();
+                let uaf = uaf().wrapping_offset(9999999999999);
+                map.get(&unsafe { *uaf as u64 });
             }
             Action::Insert(k) => {
                 keys.push(k);
