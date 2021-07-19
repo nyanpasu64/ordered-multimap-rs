@@ -1,10 +1,8 @@
 #![no_main]
-#![feature(bench_black_box)]
+use itertools::Itertools;
 use libfuzzer_sys::arbitrary::{self, Arbitrary};
 use libfuzzer_sys::fuzz_target;
 use ordered_multimap::ListOrderedMultimap;
-use std::hash::Hash;
-use std::hint::black_box;
 
 #[derive(Arbitrary, Debug)]
 enum Capacity {
@@ -57,14 +55,18 @@ fn fuzz(data: &Setup) {
         Capacity::New => ListOrderedMultimap::new(),
         Capacity::WithCapacity { k, v } => ListOrderedMultimap::with_capacity(k % M, v % M),
     };
+    let mut keys: Vec<u64> = Vec::new();
 
     for action in &data.actions {
         match action {
             &Action::Insert(k) => {
+                keys.push(k);
                 map.insert(k, counter());
             }
         }
     }
+
+    assert!(map.keys().eq(keys.iter().unique()));
 }
 
 fuzz_target!(|data: Setup| {
