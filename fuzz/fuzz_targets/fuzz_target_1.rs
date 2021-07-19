@@ -20,6 +20,7 @@ enum Capacity {
 
 #[derive(Arbitrary, Debug)]
 enum Action {
+    PackToFit,
     Insert(u64),
 }
 
@@ -58,8 +59,11 @@ fn fuzz(data: &Setup) {
     let mut keys: Vec<u64> = Vec::new();
 
     for action in &data.actions {
-        match action {
-            &Action::Insert(k) => {
+        match *action {
+            Action::PackToFit => {
+                map.pack_to_fit();
+            }
+            Action::Insert(k) => {
                 keys.push(k);
                 map.insert(k, counter());
             }
