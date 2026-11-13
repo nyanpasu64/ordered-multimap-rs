@@ -2,6 +2,7 @@
 use itertools::Itertools;
 use libfuzzer_sys::arbitrary::{self, Arbitrary};
 use libfuzzer_sys::fuzz_target;
+use multimap::MultiMap;
 use ordered_multimap::ListOrderedMultimap;
 
 #[derive(Arbitrary, Debug)]
@@ -56,6 +57,7 @@ fn fuzz(data: &Setup) {
         Capacity::New => ListOrderedMultimap::new(),
         Capacity::WithCapacity { k, v } => ListOrderedMultimap::with_capacity(k % M, v % M),
     };
+    let mut multimap: MultiMap<u64, u64> = MultiMap::new();
     let mut keys: Vec<u64> = Vec::new();
 
     for action in &data.actions {
@@ -65,12 +67,19 @@ fn fuzz(data: &Setup) {
             }
             Action::Insert(k) => {
                 keys.push(k);
-                map.insert(k, counter());
+                let v = counter();
+                // > Inserts the key-value pair into the multimap and returns the first value, by insertion order, that was already associated with the key.
+                // not documented is that it overwrites/swaps out the old value if present, so it won't increase the length.
+                multimap.insert(k, v);
+                map.insert(k, v);
             }
         }
     }
 
     assert!(map.keys().eq(keys.iter().unique()));
+    for (k, vs) in map.pairs() {
+        multimap.
+    }
 }
 
 fuzz_target!(|data: Setup| {
